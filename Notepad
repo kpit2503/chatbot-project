@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Chatbot</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .bot-image {
+             width: 150px;
+             height: 150px;
+             margin-bottom: 20px;
+             background-image: url('C:/Users/Shamshad/Desktop/chatbot/image.png');
+             background-size: cover;
+             border-radius: 50%;
+             transition: transform 0.3s;
+        }
+
+        }
+
+        .bot-image.talking {
+            animation: talk 0.5s infinite alternate;
+            background-image: url('C:/Users/Shamshad/Desktop/chatbot/image.png');
+        }
+
+        @keyframes talk {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        .chat-box {
+            width: 300px;
+            height: 200px;
+            border: 1px solid #ccc;
+            margin: 10px 0;
+            padding: 10px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="bot-image" id="botImage"></div>
+        <div class="chat-box" id="chatBox"></div>
+        <button id="startButton">Start Listening</button>
+        <button id="speakButton">Speak Response</button>
+    </div>
+
+    <script>
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        const synthesis = window.speechSynthesis;
+        const chatBox = document.getElementById('chatBox');
+        const botImage = document.getElementById('botImage');
+        const startButton = document.getElementById('startButton');
+        const speakButton = document.getElementById('speakButton');
+
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            addMessage('You: ' + transcript, 'user');
+            processInput(transcript);
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+        };
+
+        startButton.addEventListener('click', () => {
+            recognition.start();
+            startButton.textContent = 'Listening...';
+        });
+
+        function processInput(text) {
+            let response = "I'm sorry, I didn't understand that.";
+            text = text.toLowerCase();
+
+            if (text.includes('hello') || text.includes('hi')) {
+                response = "Hello! How can I help you today?";
+            } else if (text.includes('how are you')) {
+                response = "I'm just a chatbot, but thanks for asking!";
+            }
+
+            addMessage('Bot: ' + response, 'bot');
+            speakResponse(response);
+        }
+
+        function speakResponse(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            botImage.classList.add('talking');
+            
+            utterance.onstart = () => {
+                botImage.classList.add('talking');
+            };
+
+            utterance.onend = () => {
+                botImage.classList.remove('talking');
+                startButton.textContent = 'Start Listening';
+            };
+
+            synthesis.speak(utterance);
+        }
+
+        function addMessage(text, sender) {
+            const message = document.createElement('div');
+            message.textContent = text;
+            message.style.color = sender === 'user' ? 'blue' : 'green';
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        speakButton.addEventListener('click', () => {
+            const lastBotMessage = [...chatBox.children]
+                .reverse()
+                .find(el => el.textContent.startsWith('Bot:'));
+            
+            if (lastBotMessage) {
+                speakResponse(lastBotMessage.textContent.replace('Bot: ', ''));
+            }
+        });
+    </script>
+</body>
+</html>
